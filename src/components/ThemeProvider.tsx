@@ -43,8 +43,13 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   );
 }
 
+const defaultContext: ThemeContextType = {
+  theme: "light",
+  toggleTheme: () => {},
+};
+
 export const useTheme = () => {
   const context = useContext(ThemeContext);
-  if (!context) throw new Error("useTheme must be used within a ThemeProvider");
+  if (!context) return defaultContext;
   return context;
 };

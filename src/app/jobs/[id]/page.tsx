@@ -7,6 +7,7 @@ import { fetchJob, fetchRelatedJobs, fetchCompanyReviews, Job } from "@/lib/api"
 import { useSession } from "@/lib/auth-client";
 import { JobCardSkeleton } from "@/components/JobCard";
 import JobCard from "@/components/JobCard";
+import CoverLetterGenerator from "@/components/CoverLetterGenerator";
 
 function timeAgo(dateString: string): string {
   const now = new Date();
@@ -152,7 +153,14 @@ export default function JobDetailPage() {
                 {job.location && <span className="ml-2">• {job.location}</span>}
               </p>
             </div>
-            <div className="flex-shrink-0">
+            <div className="flex-shrink-0 flex items-center gap-3">
+              {isLoggedIn && user?.role === "candidate" && (
+                <CoverLetterGenerator
+                  jobTitle={job.title}
+                  companyName={companyName}
+                  jobId={jobId}
+                />
+              )}
               {isLoggedIn ? (
                 <button className="px-6 py-3 bg-white text-blue-600 font-semibold rounded-xl hover:bg-blue-50 transition-colors">
                   Apply Now
@@ -348,6 +356,13 @@ export default function JobDetailPage() {
                     </svg>
                     Login to Apply
                   </Link>
+                )}
+                {isLoggedIn && user?.role === "candidate" && (
+                  <CoverLetterGenerator
+                    jobTitle={job.title}
+                    companyName={companyName}
+                    jobId={jobId}
+                  />
                 )}
                 <button className="w-full mt-3 py-3 border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 font-medium rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors flex items-center justify-center gap-2">
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">

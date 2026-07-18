@@ -28,9 +28,14 @@ export default function Navbar() {
         { href: "/", label: "Home" },
         { href: "/jobs", label: "Jobs" },
         { href: "/dashboard", label: "Dashboard" },
-        ...(role === "employer"
+        ...(role === "admin"
+          ? [{ href: "/admin/analytics", label: "Admin" }]
+          : role === "employer"
           ? [{ href: "/jobs/add", label: "Add Job" }]
-          : [{ href: "/applications", label: "Applications" }]),
+          : [
+              { href: "/applications", label: "Applications" },
+              { href: "/cover-letters", label: "Cover Letters" },
+            ]),
         { href: "/profile", label: "Profile" },
       ]
     : [
