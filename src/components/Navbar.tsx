@@ -27,15 +27,8 @@ export default function Navbar() {
     ? [
         { href: "/", label: "Home" },
         { href: "/jobs", label: "Jobs" },
-        { href: "/dashboard", label: "Dashboard" },
-        { href: "/blog", label: "Blog" },
-        ...(role === "admin"
-          ? [{ href: "/admin/analytics", label: "Admin" }]
-          : role === "employer"
-          ? [{ href: "/jobs/add", label: "Add Job" }, { href: "/jobs/manage", label: "Manage Jobs" }]
-          : [
-              { href: "/cover-letters", label: "Cover Letters" },
-            ]),
+        { href: role === "admin" ? "/admin" : role === "employer" ? "/jobs/manage" : "/dashboard", label: "Dashboard" },
+        { href: "/profile", label: "Profile" },
       ]
     : [
         { href: "/", label: "Home" },
@@ -112,7 +105,22 @@ export default function Navbar() {
 
             {isLoggedIn ? (
               <div className="flex items-center space-x-3">
-                <span className="text-sm text-gray-500 dark:text-gray-400">{user?.name}</span>
+                <Link href="/profile" className="flex items-center gap-2 group">
+                  {user?.image ? (
+                    <img
+                      src={user.image}
+                      alt={user?.name || "User"}
+                      className="w-8 h-8 rounded-full object-cover ring-2 ring-gray-200 dark:ring-gray-700 group-hover:ring-blue-400 dark:group-hover:ring-blue-500 transition-all"
+                    />
+                  ) : (
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-sm ring-2 ring-gray-200 dark:ring-gray-700 group-hover:ring-blue-400 dark:group-hover:ring-blue-500 transition-all">
+                      {user?.name?.charAt(0)?.toUpperCase() || "U"}
+                    </div>
+                  )}
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300 group-hover:text-gray-900 dark:group-hover:text-white transition-colors hidden lg:inline">
+                    {user?.name}
+                  </span>
+                </Link>
                 <button
                   onClick={handleLogout}
                   className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"
@@ -194,12 +202,28 @@ export default function Navbar() {
             ))}
             <div className="border-t border-gray-200 dark:border-gray-800 pt-3 mt-3">
               {isLoggedIn ? (
-                <button
-                  onClick={handleLogout}
-                  className="w-full text-left px-3 py-2 rounded-lg text-sm font-medium text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-800"
-                >
-                  Logout
-                </button>
+                <div className="space-y-1">
+                  <div className="flex items-center gap-3 px-3 py-2">
+                    {user?.image ? (
+                      <img
+                        src={user.image}
+                        alt={user?.name || "User"}
+                        className="w-10 h-10 rounded-full object-cover ring-2 ring-gray-200 dark:ring-gray-700"
+                      />
+                    ) : (
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-base ring-2 ring-gray-200 dark:ring-gray-700">
+                        {user?.name?.charAt(0)?.toUpperCase() || "U"}
+                      </div>
+                    )}
+                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{user?.name}</span>
+                  </div>
+                  <button
+                    onClick={handleLogout}
+                    className="w-full text-left px-3 py-2 rounded-lg text-sm font-medium text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-800"
+                  >
+                    Logout
+                  </button>
+                </div>
               ) : (
                 <div className="space-y-1">
                   <Link

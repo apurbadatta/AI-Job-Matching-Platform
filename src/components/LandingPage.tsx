@@ -359,8 +359,8 @@ export default function LandingPage() {
           <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
             {[
               { name: "Free", price: "$0", desc: "For job seekers", features: ["AI job matching", "5 applications/week", "Basic profile", "Email support"], cta: "Get Started" },
-              { name: "Pro", price: "$19", desc: "For professionals", features: ["Unlimited applications", "Priority matching", "Resume review", "Analytics dashboard"], cta: "Start Pro Trial", popular: true },
-              { name: "Business", price: "$99", desc: "For employers", features: ["Unlimited job posts", "Candidate search", "Team collaboration", "API access"], cta: "Contact Sales" },
+              { name: "Pro", price: "$9.99", desc: "For professionals", features: ["Unlimited applications", "Priority matching", "Resume review", "Analytics dashboard"], cta: "Start Pro Trial", popular: true },
+              { name: "Business", price: "$29.99", desc: "For employers", features: ["Unlimited job posts", "Candidate search", "Team collaboration", "API access"], cta: "Contact Sales" },
             ].map((plan) => (
               <div key={plan.name} className={`rounded-2xl p-8 ${plan.popular ? "bg-blue-600 text-white ring-4 ring-blue-400" : "bg-gray-50 dark:bg-gray-800"}`}>
                 {plan.popular && <div className="text-sm font-medium text-blue-200 mb-2">Most Popular</div>}

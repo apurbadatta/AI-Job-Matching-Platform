@@ -7,6 +7,7 @@ import {
   suspendUser,
   activateUser,
   toggleUserVerification,
+  changeUserRole,
   AdminUser,
 } from "@/lib/api";
 
@@ -61,6 +62,13 @@ export default function AdminUsersPage() {
 
   const verifyMutation = useMutation({
     mutationFn: toggleUserVerification,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["adminUsers"] });
+    },
+  });
+
+  const roleMutation = useMutation({
+    mutationFn: ({ id, role }: { id: string; role: string }) => changeUserRole(id, role),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["adminUsers"] });
     },
@@ -145,9 +153,16 @@ export default function AdminUsersPage() {
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <span className={`px-2.5 py-0.5 text-xs font-medium rounded-full ${roleColors[user.role] || ""}`}>
-                        {user.role}
-                      </span>
+                      <select
+                        value={user.role}
+                        onChange={(e) => roleMutation.mutate({ id: user._id, role: e.target.value })}
+                        disabled={roleMutation.isPending}
+                        className={`px-2.5 py-0.5 text-xs font-medium rounded-full border-0 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer ${roleColors[user.role] || ""}`}
+                      >
+                        <option value="candidate">candidate</option>
+                        <option value="employer">employer</option>
+                        <option value="admin">admin</option>
+                      </select>
                     </td>
                     <td className="px-6 py-4">
                       <span className={`px-2.5 py-0.5 text-xs font-medium rounded-full ${statusColors[user.status] || ""}`}>

@@ -16,6 +16,7 @@ export default function AddJobPage() {
   const [loading, setLoading] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
   const [error, setError] = useState("");
+  const [aiError, setAiError] = useState("");
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [showAiModal, setShowAiModal] = useState(false);
   const [aiBulletPoints, setAiBulletPoints] = useState("");
@@ -37,6 +38,8 @@ export default function AddJobPage() {
       router.push("/login?redirect=/jobs/add");
     } else if (!isPending && user && user.role === "candidate") {
       setError("Only employer accounts can post jobs.");
+    } else if (!isPending && user && user.role === "admin") {
+      router.push("/admin/jobs");
     }
   }, [session, isPending, router, user]);
 
@@ -83,6 +86,7 @@ export default function AddJobPage() {
       return;
     }
     setAiLoading(true);
+    setAiError("");
     try {
       const description = await generateJobDescription(
         aiBulletPoints,
@@ -90,11 +94,14 @@ export default function AddJobPage() {
         form.category || "General",
         user?.companyName || "the company"
       );
-      setForm({ ...form, fullDescription: description });
+      setForm((prev) => ({ ...prev, fullDescription: description }));
       setShowAiModal(false);
       setAiBulletPoints("");
+      setAiError("");
     } catch (err: any) {
-      setError(err.response?.data?.error || "Failed to generate description");
+      const msg = err.response?.data?.error || "Failed to generate description. Please try again.";
+      setAiError(msg);
+      setError(msg);
     } finally {
       setAiLoading(false);
     }
@@ -342,6 +349,11 @@ export default function AddJobPage() {
             <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
               Enter key points about the job and our AI will expand them into a professional description.
             </p>
+            {aiError && (
+              <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 px-4 py-3 rounded-xl text-sm mb-4">
+                {aiError}
+              </div>
+            )}
             <textarea
               value={aiBulletPoints}
               onChange={(e) => setAiBulletPoints(e.target.value)}

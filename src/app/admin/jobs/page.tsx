@@ -8,6 +8,7 @@ import {
   rejectJob,
   adminDeleteJob,
   toggleJobFeatured,
+  adminEditJob,
   AdminJob,
 } from "@/lib/api";
 
@@ -28,6 +29,8 @@ const statusColors: Record<string, string> = {
   rejected: "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400",
 };
 
+const CATEGORIES = ["Development", "Design", "Marketing", "Sales", "Data Science", "Finance", "Engineering", "Product", "Customer Support", "Other"];
+
 export default function AdminJobsPage() {
   const queryClient = useQueryClient();
   const [page, setPage] = useState(1);
@@ -35,6 +38,8 @@ export default function AdminJobsPage() {
   const [search, setSearch] = useState("");
   const [searchInput, setSearchInput] = useState("");
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+  const [editJob, setEditJob] = useState<AdminJob | null>(null);
+  const [editForm, setEditForm] = useState({ title: "", shortDescription: "", fullDescription: "", category: "", location: "", salary: "", jobType: "full-time", deadline: "" });
 
   const { data, isLoading } = useQuery({
     queryKey: ["adminJobs", page, statusFilter, search],
@@ -64,10 +69,32 @@ export default function AdminJobsPage() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["adminJobs"] }),
   });
 
+  const editMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: any }) => adminEditJob(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["adminJobs"] });
+      setEditJob(null);
+    },
+  });
+
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     setSearch(searchInput);
     setPage(1);
+  };
+
+  const openEdit = (job: AdminJob) => {
+    setEditJob(job);
+    setEditForm({
+      title: job.title,
+      shortDescription: job.shortDescription,
+      fullDescription: job.fullDescription,
+      category: job.category,
+      location: job.location,
+      salary: job.salary,
+      jobType: job.jobType,
+      deadline: job.deadline ? new Date(job.deadline).toISOString().split("T")[0] : "",
+    });
   };
 
   const jobs = data?.jobs || [];
@@ -209,12 +236,20 @@ export default function AdminJobsPage() {
                             </button>
                           </div>
                         ) : (
-                          <button
-                            onClick={() => setDeleteConfirm(job._id)}
-                            className="px-3 py-1.5 text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 hover:text-red-600 dark:hover:text-red-400 transition-colors"
-                          >
-                            Delete
-                          </button>
+                          <>
+                            <button
+                              onClick={() => openEdit(job)}
+                              className="px-3 py-1.5 text-xs font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-900/50 transition-colors"
+                            >
+                              Edit
+                            </button>
+                            <button
+                              onClick={() => setDeleteConfirm(job._id)}
+                              className="px-3 py-1.5 text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 hover:text-red-600 dark:hover:text-red-400 transition-colors"
+                            >
+                              Delete
+                            </button>
+                          </>
                         )}
                       </div>
                     </td>
@@ -251,6 +286,114 @@ export default function AdminJobsPage() {
           </div>
         )}
       </div>
+
+      {/* Edit Modal */}
+      {editJob && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl max-w-lg w-full p-6 max-h-[90vh] overflow-y-auto">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Edit Job</h3>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Title</label>
+                <input
+                  type="text"
+                  value={editForm.title}
+                  onChange={(e) => setEditForm({ ...editForm, title: e.target.value })}
+                  className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Short Description</label>
+                <input
+                  type="text"
+                  value={editForm.shortDescription}
+                  onChange={(e) => setEditForm({ ...editForm, shortDescription: e.target.value })}
+                  className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Full Description</label>
+                <textarea
+                  rows={4}
+                  value={editForm.fullDescription}
+                  onChange={(e) => setEditForm({ ...editForm, fullDescription: e.target.value })}
+                  className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Category</label>
+                  <select
+                    value={editForm.category}
+                    onChange={(e) => setEditForm({ ...editForm, category: e.target.value })}
+                    className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    {CATEGORIES.map((c) => (
+                      <option key={c} value={c}>{c}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Job Type</label>
+                  <select
+                    value={editForm.jobType}
+                    onChange={(e) => setEditForm({ ...editForm, jobType: e.target.value })}
+                    className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="full-time">Full-time</option>
+                    <option value="part-time">Part-time</option>
+                    <option value="remote">Remote</option>
+                  </select>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Location</label>
+                  <input
+                    type="text"
+                    value={editForm.location}
+                    onChange={(e) => setEditForm({ ...editForm, location: e.target.value })}
+                    className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Salary</label>
+                  <input
+                    type="text"
+                    value={editForm.salary}
+                    onChange={(e) => setEditForm({ ...editForm, salary: e.target.value })}
+                    className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Deadline</label>
+                <input
+                  type="date"
+                  value={editForm.deadline}
+                  onChange={(e) => setEditForm({ ...editForm, deadline: e.target.value })}
+                  className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+            </div>
+            <div className="flex justify-end gap-3 mt-6">
+              <button
+                onClick={() => setEditJob(null)}
+                className="px-4 py-2 border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => editMutation.mutate({ id: editJob._id, data: editForm })}
+                disabled={editMutation.isPending}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+              >
+                {editMutation.isPending ? "Saving..." : "Save Changes"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

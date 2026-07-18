@@ -5,6 +5,12 @@ import { signIn } from "@/lib/auth-client";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
+function getDashboardByRole(role: string): string {
+  if (role === "admin") return "/admin";
+  if (role === "employer") return "/jobs/manage";
+  return "/dashboard";
+}
+
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
@@ -12,6 +18,18 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  const fetchRoleAndRedirect = async () => {
+    try {
+      const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+      const res = await fetch(`${API}/api/auth/session`, { credentials: "include" });
+      const data = await res.json();
+      const role = data?.user?.role || "candidate";
+      router.push(getDashboardByRole(role));
+    } catch {
+      router.push("/dashboard");
+    }
+  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,7 +46,7 @@ export default function LoginPage() {
       if (signInError) {
         setError(signInError.message || "Invalid email or password");
       } else {
-        router.push("/dashboard");
+        await fetchRoleAndRedirect();
       }
     } catch (err) {
       setError("An unexpected error occurred");
@@ -38,7 +56,14 @@ export default function LoginPage() {
   };
 
   const handleGoogleLogin = async () => {
-    window.location.href = `${process.env.NEXT_PUBLIC_BETTER_AUTH_URL || "http://localhost:5000"}/api/auth/google`;
+    try {
+      await signIn.social({
+        provider: "google",
+        callbackURL: `${window.location.origin}/dashboard`,
+      });
+    } catch (err) {
+      setError("Google login failed. Please try again.");
+    }
   };
 
   const handleDemoLogin = async () => {
@@ -46,20 +71,16 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/auth/sign-in/email`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: "demo@jobpilot.ai",
-          password: "Demo@12345",
-          callbackURL: "/dashboard",
-        }),
+      const { error: signInError } = await signIn.email({
+        email: "demo@jobpilot.ai",
+        password: "Demo@12345",
+        callbackURL: "/dashboard",
       });
 
-      if (!res.ok) {
+      if (signInError) {
         setError("Demo login failed. Make sure you have run 'npm run seed' in the server directory.");
       } else {
-        window.location.href = "/dashboard";
+        await fetchRoleAndRedirect();
       }
     } catch {
       setError("Demo login failed. Please try again.");
@@ -69,7 +90,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="flex items-center justify-center bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         <div>
           <h1 className="text-center text-3xl font-bold text-gray-900 dark:text-white">

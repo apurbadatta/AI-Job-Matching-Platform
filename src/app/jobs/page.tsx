@@ -302,7 +302,7 @@ export default function JobsPage() {
               </button>
             </div>
             <p className="text-center text-xs text-gray-400 dark:text-gray-500 mt-3">
-              Showing {((pagination.page - 1) * 4) + 1}–{Math.min(pagination.page * 4, pagination.total)} of {pagination.total} jobs
+              Showing {((pagination.page - 1) * (queryParams.limit || 8)) + 1}–{Math.min(pagination.page * (queryParams.limit || 8), pagination.total)} of {pagination.total} jobs
             </p>
           </div>
         )}

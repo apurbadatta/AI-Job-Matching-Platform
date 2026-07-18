@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, use } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 
 interface BlogPost {
@@ -15,8 +15,8 @@ interface BlogPost {
   createdAt: string;
 }
 
-export default function BlogDetailPage({ params }: { params: Promise<{ slug: string }> }) {
-  const { slug } = use(params);
+export default function BlogDetailPage({ params }: { params: { slug: string } }) {
+  const { slug } = params;
   const [post, setPost] = useState<BlogPost | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -96,8 +96,9 @@ export default function BlogDetailPage({ params }: { params: Promise<{ slug: str
               prose-a:text-blue-600 dark:prose-a:text-blue-400
               prose-strong:text-gray-900 dark:prose-strong:text-white
               prose-li:text-gray-600 dark:prose-li:text-gray-300"
-            dangerouslySetInnerHTML={{ __html: post.content }}
-          />
+          >
+            {post.content}
+          </div>
         </div>
       </article>
 

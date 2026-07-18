@@ -55,6 +55,10 @@ export default function BlogPage() {
       if (activeCategory !== "All") params.set("category", activeCategory);
 
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/blog?${params}`);
+      if (!res.ok) {
+        setPosts([]);
+        return;
+      }
       const data = await res.json();
       setPosts(data.posts || []);
       setTotalPages(data.pagination?.pages || 1);

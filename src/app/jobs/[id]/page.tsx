@@ -56,6 +56,7 @@ export default function JobDetailPage() {
   const queryClient = useQueryClient();
   const jobId = params.id as string;
   const [applyMessage, setApplyMessage] = useState("");
+  const [applyCoverLetter, setApplyCoverLetter] = useState("");
 
   const user = session?.user as any;
   const isLoggedIn = !!session;
@@ -86,6 +87,7 @@ export default function JobDetailPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
+        body: JSON.stringify({ coverLetter: applyCoverLetter }),
       });
       if (!res.ok) {
         const data = await res.json();
@@ -212,6 +214,7 @@ export default function JobDetailPage() {
                   jobTitle={job.title}
                   companyName={companyName}
                   jobId={jobId}
+                  onGenerated={(text) => setApplyCoverLetter(text)}
                 />
               )}
               {isLoggedIn && user?.role === "candidate" ? (
@@ -423,6 +426,7 @@ export default function JobDetailPage() {
                     jobTitle={job.title}
                     companyName={companyName}
                     jobId={jobId}
+                    onGenerated={(text) => setApplyCoverLetter(text)}
                   />
                 )}
                 {isLoggedIn && user?.role === "candidate" && (

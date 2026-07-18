@@ -1,11 +1,17 @@
 "use client";
 
 import { useState } from "react";
-import { signUp } from "@/lib/auth-client";
+import { signUp, signIn } from "@/lib/auth-client";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 type Role = "candidate" | "employer";
+
+function getDashboardByRole(role: string): string {
+  if (role === "admin") return "/admin";
+  if (role === "employer") return "/jobs/manage";
+  return "/dashboard";
+}
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -60,14 +66,32 @@ export default function RegisterPage() {
 
     setLoading(true);
 
+    const fetchRoleAndRedirect = async (fallback: string) => {
+      try {
+        const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+        const res = await fetch(`${API}/api/auth/session`, { credentials: "include" });
+        const data = await res.json();
+        const userRole = data?.user?.role || "candidate";
+        window.location.href = getDashboardByRole(userRole);
+      } catch {
+        window.location.href = fallback;
+      }
+    };
+
     try {
-      const { error: signUpError } = await signUp.email({
+      const signUpData: any = {
         email,
         password,
         name,
         callbackURL: "/dashboard",
-        ...(role === "employer" ? { companyName: companyName.trim() } : {}),
-      } as any);
+        role,
+      };
+
+      if (role === "employer") {
+        signUpData.companyName = companyName.trim();
+      }
+
+      const { error: signUpError } = await signUp.email(signUpData);
 
       if (signUpError) {
         if (signUpError.message?.includes("already exists")) {
@@ -76,20 +100,8 @@ export default function RegisterPage() {
           setError(signUpError.message || "Registration failed");
         }
       } else {
-        // For employer accounts, update the role via API after signup
-        if (role === "employer") {
-          try {
-            await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/auth/update-user`, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              credentials: "include",
-              body: JSON.stringify({ role: "employer", companyName: companyName.trim() }),
-            });
-          } catch {
-            // Role update failed but account was created
-          }
-        }
-        router.push("/dashboard");
+        const redirectUrl = role === "employer" ? "/jobs/manage" : "/dashboard";
+        await fetchRoleAndRedirect(redirectUrl);
       }
     } catch {
       setError("An unexpected error occurred");
@@ -99,11 +111,18 @@ export default function RegisterPage() {
   };
 
   const handleGoogleSignUp = async () => {
-    window.location.href = `${process.env.NEXT_PUBLIC_BETTER_AUTH_URL || "http://localhost:5000"}/api/auth/google`;
+    try {
+      await signIn.social({
+        provider: "google",
+        callbackURL: `${window.location.origin}/dashboard`,
+      });
+    } catch {
+      setError("Google sign-up failed. Please try again.");
+    }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="flex items-center justify-center bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         <div>
           <h1 className="text-center text-3xl font-bold text-gray-900 dark:text-white">

@@ -287,6 +287,27 @@ export const createPortalSession = async (): Promise<PortalSessionResponse> => {
   return data;
 };
 
+export interface Invoice {
+  id: string;
+  number: string | null;
+  status: string;
+  amount: number;
+  currency: string;
+  date: number;
+  invoiceUrl: string | null;
+  pdfUrl: string | null;
+  description: string;
+}
+
+export interface InvoicesResponse {
+  invoices: Invoice[];
+}
+
+export const fetchInvoices = async (): Promise<InvoicesResponse> => {
+  const { data } = await api.get<InvoicesResponse>("/payment/invoices");
+  return data;
+};
+
 // ==================== ADMIN endpoints ====================
 
 export interface AdminUser {
@@ -351,6 +372,27 @@ export interface RevenueData {
   count: number;
 }
 
+export interface PaymentUser {
+  _id: string;
+  name: string;
+  email: string;
+  role: string;
+  subscription: {
+    plan: string;
+    status: string;
+    currentPeriodEnd?: string;
+    stripeCustomerId?: string;
+    stripeSubscriptionId?: string;
+    updatedAt?: string;
+  };
+  createdAt: string;
+}
+
+export interface PaymentUsersResponse {
+  payments: PaymentUser[];
+  pagination: Pagination;
+}
+
 // Admin - Users
 export const fetchAdminUsers = async (
   page = 1,
@@ -374,6 +416,11 @@ export const activateUser = async (id: string): Promise<void> => {
 
 export const toggleUserVerification = async (id: string): Promise<{ isVerified: boolean }> => {
   const { data } = await api.post<{ isVerified: boolean }>(`/admin/users/${id}/verify`);
+  return data;
+};
+
+export const changeUserRole = async (id: string, role: string): Promise<{ role: string }> => {
+  const { data } = await api.post<{ role: string }>(`/admin/users/${id}/role`, { role });
   return data;
 };
 
@@ -407,6 +454,46 @@ export const toggleJobFeatured = async (id: string): Promise<{ isFeatured: boole
   return data;
 };
 
+export const adminEditJob = async (id: string, jobData: Partial<CreateJobData>): Promise<void> => {
+  await api.put(`/admin/jobs/${id}`, jobData);
+};
+
+// Admin - Payments
+export const fetchAdminPayments = async (
+  page = 1,
+  plan = ""
+): Promise<PaymentUsersResponse> => {
+  const params = new URLSearchParams({ page: page.toString() });
+  if (plan) params.set("plan", plan);
+  const { data } = await api.get<PaymentUsersResponse>(`/admin/payments?${params.toString()}`);
+  return data;
+};
+
+export interface AdminInvoice {
+  id: string;
+  number: string | null;
+  status: string;
+  amount: number;
+  currency: string;
+  date: number;
+  invoiceUrl: string | null;
+  pdfUrl: string | null;
+  description: string;
+  customerName: string;
+  customerEmail: string;
+  userId: string;
+}
+
+export interface AdminInvoicesResponse {
+  invoices: AdminInvoice[];
+  totalRevenue: number;
+}
+
+export const fetchAdminInvoices = async (): Promise<AdminInvoicesResponse> => {
+  const { data } = await api.get<AdminInvoicesResponse>("/admin/invoices");
+  return data;
+};
+
 // Admin - Analytics
 export const fetchAdminStats = async (): Promise<AdminStats> => {
   const { data } = await api.get<AdminStats>("/admin/analytics/stats");
@@ -430,6 +517,35 @@ export const fetchCategoriesAnalytics = async (): Promise<CategoryData[]> => {
 
 export const fetchRevenueAnalytics = async (): Promise<RevenueData[]> => {
   const { data } = await api.get<RevenueData[]>("/admin/analytics/revenue");
+  return data;
+};
+
+export const updateProfile = async (profileData: any) => {
+  const { data } = await api.put("/profile", profileData);
+  return data;
+};
+
+export const fetchMyApplications = async (params?: { page?: number; limit?: number; status?: string }) => {
+  const searchParams = new URLSearchParams();
+  if (params?.page) searchParams.set("page", params.page.toString());
+  if (params?.limit) searchParams.set("limit", params.limit.toString());
+  if (params?.status) searchParams.set("status", params.status);
+  const { data } = await api.get(`/jobs/my-applications?${searchParams.toString()}`);
+  return data;
+};
+
+export const fetchJobApplicants = async (jobId: string) => {
+  const { data } = await api.get(`/jobs/${jobId}/applicants`);
+  return data;
+};
+
+export const updateApplicationStatus = async (jobId: string, appId: string, status: string) => {
+  const { data } = await api.put(`/jobs/${jobId}/applications/${appId}`, { status });
+  return data;
+};
+
+export const sendChatMessage = async (messages: { role: string; text: string }[]) => {
+  const { data } = await api.post("/ai/chat", { messages });
   return data;
 };
 

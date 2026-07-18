@@ -116,67 +116,18 @@ export default function AdminAnalyticsPage() {
 
       {/* Charts Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Users Over Time - Line Chart */}
+        {/* Candidates vs Employers - Pie Chart */}
         <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-6">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Users Over Time</h3>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Candidates vs Employers</h3>
           <div className="h-72">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={usersChartData}>
-                <CartesianGrid strokeDasharray="3 3" stroke={gridColor} opacity={0.5} />
-                <XAxis dataKey="label" tick={{ fontSize: 12, fill: tickColor }} />
-                <YAxis tick={{ fontSize: 12, fill: tickColor }} />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: theme === "dark" ? "#1F2937" : "#FFFFFF",
-                    border: `1px solid ${theme === "dark" ? "#374151" : "#E5E7EB"}`,
-                    borderRadius: "8px",
-                    color: theme === "dark" ? "#F3F4F6" : "#111827",
-                  }}
-                />
-                <Legend />
-                <Line type="monotone" dataKey="candidates" stroke="#3B82F6" strokeWidth={2} name="Candidates" dot={false} />
-                <Line type="monotone" dataKey="employers" stroke="#8B5CF6" strokeWidth={2} name="Employers" dot={false} />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-
-        {/* Jobs Per Month - Bar Chart */}
-        <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-6">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Jobs Posted Per Month</h3>
-          <div className="h-72">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={jobsChartData}>
-                <CartesianGrid strokeDasharray="3 3" stroke={gridColor} opacity={0.5} />
-                <XAxis dataKey="label" tick={{ fontSize: 12, fill: tickColor }} />
-                <YAxis tick={{ fontSize: 12, fill: tickColor }} />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: theme === "dark" ? "#1F2937" : "#FFFFFF",
-                    border: `1px solid ${theme === "dark" ? "#374151" : "#E5E7EB"}`,
-                    borderRadius: "8px",
-                    color: theme === "dark" ? "#F3F4F6" : "#111827",
-                  }}
-                />
-                <Bar dataKey="count" fill="#3B82F6" radius={[4, 4, 0, 0]} name="Jobs Posted" />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-
-        {/* Categories - Pie Chart */}
-        <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-6">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Job Categories</h3>
-          <div className="h-72">
-            {categoriesData.length === 0 ? (
-              <div className="h-full flex items-center justify-center text-gray-400 dark:text-gray-500 text-sm">
-                No data available
-              </div>
-            ) : (
+            {stats ? (
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
-                    data={categoriesData}
+                    data={[
+                      { name: "Candidates", value: stats.totalCandidates || 0, color: "#3B82F6" },
+                      { name: "Employers", value: stats.totalEmployers || 0, color: "#8B5CF6" },
+                    ].filter(d => d.value > 0)}
                     cx="50%"
                     cy="50%"
                     innerRadius={60}
@@ -184,7 +135,7 @@ export default function AdminAnalyticsPage() {
                     paddingAngle={3}
                     dataKey="value"
                   >
-                    {categoriesData.map((entry, index) => (
+                    {[{ name: "Candidates", value: stats.totalCandidates || 0, color: "#3B82F6" }, { name: "Employers", value: stats.totalEmployers || 0, color: "#8B5CF6" }].filter((d: any) => d.value > 0).map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={entry.color} />
                     ))}
                   </Pie>
@@ -198,6 +149,64 @@ export default function AdminAnalyticsPage() {
                   />
                   <Legend />
                 </PieChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="h-full flex items-center justify-center text-gray-400 text-sm">Loading...</div>
+            )}
+          </div>
+        </div>
+
+        {/* Jobs Posted Per Month - Line Chart */}
+        <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-6">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Jobs Posted Per Month</h3>
+          <div className="h-72">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={jobsChartData}>
+                <CartesianGrid strokeDasharray="3 3" stroke={gridColor} opacity={0.5} />
+                <XAxis dataKey="label" tick={{ fontSize: 12, fill: tickColor }} />
+                <YAxis tick={{ fontSize: 12, fill: tickColor }} />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: theme === "dark" ? "#1F2937" : "#FFFFFF",
+                    border: `1px solid ${theme === "dark" ? "#374151" : "#E5E7EB"}`,
+                    borderRadius: "8px",
+                    color: theme === "dark" ? "#F3F4F6" : "#111827",
+                  }}
+                />
+                <Line type="monotone" dataKey="count" stroke="#8B5CF6" strokeWidth={2} name="Jobs Posted" dot={{ fill: "#8B5CF6" }} />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        {/* Categories - Bar Chart */}
+        <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-6">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Popular Job Categories</h3>
+          <div className="h-72">
+            {categoriesData.length === 0 ? (
+              <div className="h-full flex items-center justify-center text-gray-400 dark:text-gray-500 text-sm">
+                No data available
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={categoriesData} layout="vertical">
+                  <CartesianGrid strokeDasharray="3 3" stroke={gridColor} opacity={0.5} />
+                  <XAxis type="number" tick={{ fontSize: 12, fill: tickColor }} />
+                  <YAxis dataKey="name" type="category" width={120} tick={{ fontSize: 11, fill: tickColor }} />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: theme === "dark" ? "#1F2937" : "#FFFFFF",
+                      border: `1px solid ${theme === "dark" ? "#374151" : "#E5E7EB"}`,
+                      borderRadius: "8px",
+                      color: theme === "dark" ? "#F3F4F6" : "#111827",
+                    }}
+                  />
+                  <Bar dataKey="value" radius={[0, 4, 4, 0]} name="Jobs">
+                    {categoriesData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Bar>
+                </BarChart>
               </ResponsiveContainer>
             )}
           </div>

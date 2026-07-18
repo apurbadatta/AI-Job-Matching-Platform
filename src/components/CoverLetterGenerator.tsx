@@ -7,6 +7,7 @@ interface CoverLetterGeneratorProps {
   jobId: string;
   jobTitle: string;
   companyName: string;
+  onGenerated?: (content: string) => void;
 }
 
 const tones = [
@@ -25,6 +26,7 @@ export default function CoverLetterGenerator({
   jobId,
   jobTitle,
   companyName,
+  onGenerated,
 }: CoverLetterGeneratorProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [tone, setTone] = useState("formal");
@@ -42,6 +44,7 @@ export default function CoverLetterGenerator({
       const result = await generateCoverLetter(jobId, tone, length);
       setContent(result.coverLetter);
       setStep("editor");
+      onGenerated?.(result.coverLetter);
     } catch (err: any) {
       setError(err.response?.data?.error || "Failed to generate cover letter");
     } finally {
