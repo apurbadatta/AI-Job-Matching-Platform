@@ -7,12 +7,12 @@ import {
   fetchUsersOverTime,
   fetchJobsOverTime,
   fetchCategoriesAnalytics,
-  fetchRevenueAnalytics,
+  fetchAdminInvoices,
   AdminStats,
   UsersOverTimeData,
   JobsOverTimeData,
   CategoryData,
-  RevenueData,
+  AdminInvoice,
 } from "@/lib/api";
 import {
   LineChart, Line, BarChart, Bar, PieChart, Pie, Cell,
@@ -60,9 +60,9 @@ export default function AdminAnalyticsPage() {
     queryFn: fetchCategoriesAnalytics,
   });
 
-  const { data: revenueData = [] } = useQuery<RevenueData[]>({
-    queryKey: ["revenueAnalytics"],
-    queryFn: fetchRevenueAnalytics,
+  const { data: invoicesData } = useQuery({
+    queryKey: ["adminInvoices"],
+    queryFn: fetchAdminInvoices,
   });
 
   const formatMonth = (month: string) => {
@@ -81,7 +81,34 @@ export default function AdminAnalyticsPage() {
     label: formatMonth(d.month),
   }));
 
-  const totalRevenue = revenueData.reduce((sum, r) => sum + r.revenue, 0);
+  const allInvoices = invoicesData?.invoices || [];
+  const totalRevenue = invoicesData?.totalRevenue || 0;
+  const paidInvoices = allInvoices.filter((inv) => inv.status === "paid");
+
+  // Monthly revenue from actual invoices
+  const monthlyRevenue: Record<string, { month: string; revenue: number; count: number }> = {};
+  paidInvoices.forEach((inv) => {
+    const d = new Date(inv.date * 1000);
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+    if (!monthlyRevenue[key]) {
+      monthlyRevenue[key] = { month: key, revenue: 0, count: 0 };
+    }
+    monthlyRevenue[key].revenue += inv.amount / 100;
+    monthlyRevenue[key].count += 1;
+  });
+
+  const sortedMonths = Object.values(monthlyRevenue).sort((a, b) => a.month.localeCompare(b.month));
+  const last6Months = sortedMonths.slice(-6);
+
+  // Plan breakdown from invoices
+  const planRevenue: Record<string, number> = {};
+  paidInvoices.forEach((inv) => {
+    const desc = inv.description?.toLowerCase() || "";
+    const plan = desc.includes("business") ? "Business" : desc.includes("pro") ? "Pro" : "Other";
+    planRevenue[plan] = (planRevenue[plan] || 0) + inv.amount / 100;
+  });
+
+  const planBreakdown = Object.entries(planRevenue).map(([plan, revenue]) => ({ plan, revenue }));
 
   return (
     <div className="space-y-6">
@@ -212,19 +239,32 @@ export default function AdminAnalyticsPage() {
           </div>
         </div>
 
-        {/* Revenue - Bar Chart */}
+        {/* Revenue - Dynamic from Stripe Invoices */}
         <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-6">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Subscription Revenue</h3>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Subscription Revenue</h3>
+            <span className="text-sm text-gray-500 dark:text-gray-400">
+              {paidInvoices.length} paid invoice{paidInvoices.length !== 1 ? "s" : ""}
+            </span>
+          </div>
           <div className="h-72">
-            {revenueData.length === 0 || totalRevenue === 0 ? (
+            {last6Months.length === 0 ? (
               <div className="h-full flex items-center justify-center text-gray-400 dark:text-gray-500 text-sm">
                 No revenue data yet
               </div>
             ) : (
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={revenueData}>
+                <BarChart data={last6Months}>
                   <CartesianGrid strokeDasharray="3 3" stroke={gridColor} opacity={0.5} />
-                  <XAxis dataKey="plan" tick={{ fontSize: 12, fill: tickColor }} />
+                  <XAxis
+                    dataKey="month"
+                    tick={{ fontSize: 12, fill: tickColor }}
+                    tickFormatter={(val) => {
+                      const [y, m] = val.split("-");
+                      const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+                      return `${months[parseInt(m) - 1]} ${y.slice(2)}`;
+                    }}
+                  />
                   <YAxis tick={{ fontSize: 12, fill: tickColor }} />
                   <Tooltip
                     contentStyle={{
@@ -233,17 +273,76 @@ export default function AdminAnalyticsPage() {
                       borderRadius: "8px",
                       color: theme === "dark" ? "#F3F4F6" : "#111827",
                     }}
-                    labelFormatter={(label) => `${label}`}
+                    formatter={(value) => [`$${Number(value).toFixed(2)}`, "Revenue"]}
+                    labelFormatter={(label) => {
+                      const [y, m] = label.split("-");
+                      const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+                      return `${months[parseInt(m) - 1]} ${y}`;
+                    }}
                   />
-                  <Bar dataKey="revenue" fill="#10B981" radius={[4, 4, 0, 0]} name="Revenue" />
+                  <Bar dataKey="revenue" fill="#10B981" radius={[4, 4, 0, 0]} name="Revenue ($)" />
                 </BarChart>
               </ResponsiveContainer>
             )}
           </div>
           {totalRevenue > 0 && (
-            <div className="mt-4 text-center">
-              <span className="text-sm text-gray-500 dark:text-gray-400">Total Monthly Revenue: </span>
-              <span className="text-lg font-bold text-green-600 dark:text-green-400">${totalRevenue.toFixed(2)}</span>
+            <div className="mt-4 flex items-center justify-between">
+              <span className="text-sm text-gray-500 dark:text-gray-400">Total Revenue</span>
+              <span className="text-lg font-bold text-green-600 dark:text-green-400">${(totalRevenue / 100).toFixed(2)}</span>
+            </div>
+          )}
+        </div>
+
+        {/* Plan Revenue Breakdown */}
+        <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-6">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Revenue by Plan</h3>
+          <div className="h-72">
+            {planBreakdown.length === 0 ? (
+              <div className="h-full flex items-center justify-center text-gray-400 dark:text-gray-500 text-sm">
+                No plan data yet
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={planBreakdown}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={60}
+                    outerRadius={100}
+                    paddingAngle={3}
+                    dataKey="revenue"
+                    nameKey="plan"
+                  >
+                    {planBreakdown.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={["#3B82F6", "#8B5CF6", "#F59E0B"][index % 3]} />
+                    ))}
+                  </Pie>
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: theme === "dark" ? "#1F2937" : "#FFFFFF",
+                      border: `1px solid ${theme === "dark" ? "#374151" : "#E5E7EB"}`,
+                      borderRadius: "8px",
+                      color: theme === "dark" ? "#F3F4F6" : "#111827",
+                    }}
+                    formatter={(value) => [`$${Number(value).toFixed(2)}`, "Revenue"]}
+                  />
+                  <Legend />
+                </PieChart>
+              </ResponsiveContainer>
+            )}
+          </div>
+          {planBreakdown.length > 0 && (
+            <div className="mt-4 space-y-2">
+              {planBreakdown.map((p, i) => (
+                <div key={p.plan} className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className={`w-3 h-3 rounded-full`} style={{ backgroundColor: ["#3B82F6", "#8B5CF6", "#F59E0B"][i % 3] }} />
+                    <span className="text-sm text-gray-700 dark:text-gray-300">{p.plan}</span>
+                  </div>
+                  <span className="text-sm font-semibold text-gray-900 dark:text-white">${p.revenue.toFixed(2)}</span>
+                </div>
+              ))}
             </div>
           )}
         </div>
