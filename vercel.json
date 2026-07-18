@@ -3,12 +3,6 @@
   "buildCommand": "npm run build",
   "installCommand": "npm install",
   "outputDirectory": ".next",
-  "env": {
-    "NEXT_PUBLIC_API_URL": "@api-url",
-    "NEXT_PUBLIC_BETTER_AUTH_URL": "@api-url",
-    "NEXT_PUBLIC_GOOGLE_CLIENT_ID": "@google-client-id",
-    "NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY": "@stripe-publishable-key"
-  },
   "headers": [
     {
       "source": "/(.*)",
