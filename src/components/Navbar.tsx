@@ -28,25 +28,30 @@ export default function Navbar() {
         { href: "/", label: "Home" },
         { href: "/jobs", label: "Jobs" },
         { href: "/dashboard", label: "Dashboard" },
+        { href: "/blog", label: "Blog" },
         ...(role === "admin"
           ? [{ href: "/admin/analytics", label: "Admin" }]
           : role === "employer"
-          ? [{ href: "/jobs/add", label: "Add Job" }]
+          ? [{ href: "/jobs/add", label: "Add Job" }, { href: "/jobs/manage", label: "Manage Jobs" }]
           : [
-              { href: "/applications", label: "Applications" },
               { href: "/cover-letters", label: "Cover Letters" },
             ]),
-        { href: "/profile", label: "Profile" },
       ]
     : [
         { href: "/", label: "Home" },
         { href: "/jobs", label: "Jobs" },
+        { href: "/blog", label: "Blog" },
         { href: "/about", label: "About" },
+        { href: "/contact", label: "Contact" },
       ];
 
   const handleLogout = async () => {
     await signOut({
-      fetchOptions: { onSuccess: () => (window.location.href = "/") },
+      fetchOptions: {
+        onSuccess: () => {
+          window.location.href = "/";
+        },
+      },
     });
   };
 
@@ -137,7 +142,7 @@ export default function Navbar() {
           <div className="md:hidden flex items-center space-x-2">
             <button
               onClick={toggleTheme}
-              className="p-2 rounded-lg text-gray-600 dark:text-gray-300"
+              className="p-2 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
               aria-label="Toggle dark mode"
             >
               {theme === "dark" ? (

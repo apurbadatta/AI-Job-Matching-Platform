@@ -371,7 +371,7 @@ export default function DashboardPage() {
                     </h3>
                     <p className="text-sm text-gray-500 dark:text-gray-400">
                       {subscription.plan === "free"
-                        ? `${3 - (subscription.jobPostLimit === -1 ? 0 : 0)} of 3 job posts used`
+                        ? `${user?.jobPostCount || 0} of 3 job posts used`
                         : "Unlimited job posts"}
                     </p>
                   </div>

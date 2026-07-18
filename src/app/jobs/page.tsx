@@ -32,7 +32,7 @@ export default function JobsPage() {
     jobType: jobType || undefined,
     sort,
     page,
-    limit: 12,
+    limit: 8,
   };
 
   const { data, isLoading, isFetching, error } = useQuery({
@@ -43,6 +43,10 @@ export default function JobsPage() {
 
   const jobs = data?.jobs || [];
   const pagination = data?.pagination;
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
 
   const handleSearch = useCallback((e: React.FormEvent) => {
     e.preventDefault();
@@ -176,25 +180,25 @@ export default function JobsPage() {
               {search && (
                 <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 text-xs rounded-lg flex items-center gap-1">
                   Search: {search}
-                  <button onClick={() => { setSearch(""); setPage(1); }} className="hover:text-blue-900">×</button>
+                  <button onClick={() => { setSearch(""); setPage(1); }} className="hover:text-blue-900 dark:hover:text-blue-200">×</button>
                 </span>
               )}
               {category && (
                 <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 text-xs rounded-lg flex items-center gap-1">
                   {category}
-                  <button onClick={() => { setCategory(""); setPage(1); }} className="hover:text-blue-900">×</button>
+                  <button onClick={() => { setCategory(""); setPage(1); }} className="hover:text-blue-900 dark:hover:text-blue-200">×</button>
                 </span>
               )}
               {location && (
                 <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 text-xs rounded-lg flex items-center gap-1">
                   {location}
-                  <button onClick={() => { setLocation(""); setPage(1); }} className="hover:text-blue-900">×</button>
+                  <button onClick={() => { setLocation(""); setPage(1); }} className="hover:text-blue-900 dark:hover:text-blue-200">×</button>
                 </span>
               )}
               {jobType && (
                 <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 text-xs rounded-lg flex items-center gap-1">
                   {jobType}
-                  <button onClick={() => { setJobType(""); setPage(1); }} className="hover:text-blue-900">×</button>
+                  <button onClick={() => { setJobType(""); setPage(1); }} className="hover:text-blue-900 dark:hover:text-blue-200">×</button>
                 </span>
               )}
               <button
@@ -238,7 +242,7 @@ export default function JobsPage() {
         {/* Job Cards Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {isLoading
-            ? Array.from({ length: 12 }).map((_, i) => <JobCardSkeleton key={i} />)
+            ? Array.from({ length: 4 }).map((_, i) => <JobCardSkeleton key={i} />)
             : jobs.map((job) => <JobCard key={job._id} job={job} />)}
         </div>
 
@@ -261,40 +265,45 @@ export default function JobsPage() {
 
         {/* Pagination */}
         {pagination && pagination.pages > 1 && (
-          <div className="flex items-center justify-center gap-2 mt-8">
-            <button
-              onClick={() => setPage(Math.max(1, page - 1))}
-              disabled={page === 1}
-              className="px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-            >
-              Previous
-            </button>
-            {Array.from({ length: pagination.pages }, (_, i) => i + 1)
-              .filter((p) => p === 1 || p === pagination.pages || Math.abs(p - page) <= 2)
-              .map((p, i, arr) => (
-                <span key={p} className="flex items-center">
-                  {i > 0 && arr[i - 1] !== p - 1 && (
-                    <span className="px-2 text-gray-400">...</span>
-                  )}
-                  <button
-                    onClick={() => setPage(p)}
-                    className={`w-9 h-9 text-sm font-medium rounded-lg transition-colors ${
-                      page === p
-                        ? "bg-blue-600 text-white"
-                        : "text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700"
-                    }`}
-                  >
-                    {p}
-                  </button>
-                </span>
-              ))}
-            <button
-              onClick={() => setPage(Math.min(pagination.pages, page + 1))}
-              disabled={page === pagination.pages}
-              className="px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-            >
-              Next
-            </button>
+          <div className="mt-8">
+            <div className="flex items-center justify-center gap-2">
+              <button
+                onClick={() => { setPage(Math.max(1, page - 1)); scrollToTop(); }}
+                disabled={page === 1}
+                className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                ← Previous
+              </button>
+              {Array.from({ length: pagination.pages }, (_, i) => i + 1)
+                .filter((p) => p === 1 || p === pagination.pages || Math.abs(p - page) <= 1)
+                .map((p, i, arr) => (
+                  <span key={p} className="flex items-center">
+                    {i > 0 && arr[i - 1] !== p - 1 && (
+                      <span className="px-2 text-gray-400">...</span>
+                    )}
+                    <button
+                      onClick={() => { setPage(p); scrollToTop(); }}
+                      className={`w-10 h-10 text-sm font-medium rounded-lg transition-colors ${
+                        page === p
+                          ? "bg-blue-600 text-white shadow-md"
+                          : "text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700"
+                      }`}
+                    >
+                      {p}
+                    </button>
+                  </span>
+                ))}
+              <button
+                onClick={() => { setPage(Math.min(pagination.pages, page + 1)); scrollToTop(); }}
+                disabled={page === pagination.pages}
+                className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                Next →
+              </button>
+            </div>
+            <p className="text-center text-xs text-gray-400 dark:text-gray-500 mt-3">
+              Showing {((pagination.page - 1) * 4) + 1}–{Math.min(pagination.page * 4, pagination.total)} of {pagination.total} jobs
+            </p>
           </div>
         )}
       </div>

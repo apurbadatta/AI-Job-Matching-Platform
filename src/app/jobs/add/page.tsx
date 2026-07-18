@@ -333,7 +333,7 @@ export default function AddJobPage() {
           <div className="bg-white dark:bg-gray-800 rounded-2xl max-w-lg w-full p-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Generate with AI</h3>
-              <button onClick={() => setShowAiModal(false)} className="text-gray-400 hover:text-gray-600">
+              <button onClick={() => setShowAiModal(false)} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors">
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>

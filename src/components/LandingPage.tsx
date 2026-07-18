@@ -447,7 +447,7 @@ export default function LandingPage() {
               placeholder="Enter your email"
               className="flex-1 px-4 py-3 rounded-xl text-gray-900 placeholder-gray-500 outline-none"
             />
-            <button className="px-6 py-3 bg-gray-900 hover:bg-gray-800 text-white font-medium rounded-xl transition-colors">
+            <button className="px-6 py-3 bg-white text-blue-600 hover:bg-blue-50 font-medium rounded-xl transition-colors">
               Subscribe
             </button>
           </div>

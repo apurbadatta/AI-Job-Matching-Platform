@@ -1,6 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
+import { useTheme } from "@/components/ThemeProvider";
 import {
   fetchAdminStats,
   fetchUsersOverTime,
@@ -35,6 +36,10 @@ function StatCard({ label, value, icon, color }: { label: string; value: number 
 }
 
 export default function AdminAnalyticsPage() {
+  const { theme } = useTheme();
+  const gridColor = theme === "dark" ? "#374151" : "#E5E7EB";
+  const tickColor = theme === "dark" ? "#9CA3AF" : "#6B7280";
+
   const { data: stats, isLoading: statsLoading } = useQuery<AdminStats>({
     queryKey: ["adminStats"],
     queryFn: fetchAdminStats,
@@ -117,15 +122,15 @@ export default function AdminAnalyticsPage() {
           <div className="h-72">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={usersChartData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.3} />
-                <XAxis dataKey="label" tick={{ fontSize: 12, fill: "#9CA3AF" }} />
-                <YAxis tick={{ fontSize: 12, fill: "#9CA3AF" }} />
+                <CartesianGrid strokeDasharray="3 3" stroke={gridColor} opacity={0.5} />
+                <XAxis dataKey="label" tick={{ fontSize: 12, fill: tickColor }} />
+                <YAxis tick={{ fontSize: 12, fill: tickColor }} />
                 <Tooltip
                   contentStyle={{
-                    backgroundColor: "#1F2937",
-                    border: "1px solid #374151",
+                    backgroundColor: theme === "dark" ? "#1F2937" : "#FFFFFF",
+                    border: `1px solid ${theme === "dark" ? "#374151" : "#E5E7EB"}`,
                     borderRadius: "8px",
-                    color: "#F3F4F6",
+                    color: theme === "dark" ? "#F3F4F6" : "#111827",
                   }}
                 />
                 <Legend />
@@ -142,15 +147,15 @@ export default function AdminAnalyticsPage() {
           <div className="h-72">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={jobsChartData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.3} />
-                <XAxis dataKey="label" tick={{ fontSize: 12, fill: "#9CA3AF" }} />
-                <YAxis tick={{ fontSize: 12, fill: "#9CA3AF" }} />
+                <CartesianGrid strokeDasharray="3 3" stroke={gridColor} opacity={0.5} />
+                <XAxis dataKey="label" tick={{ fontSize: 12, fill: tickColor }} />
+                <YAxis tick={{ fontSize: 12, fill: tickColor }} />
                 <Tooltip
                   contentStyle={{
-                    backgroundColor: "#1F2937",
-                    border: "1px solid #374151",
+                    backgroundColor: theme === "dark" ? "#1F2937" : "#FFFFFF",
+                    border: `1px solid ${theme === "dark" ? "#374151" : "#E5E7EB"}`,
                     borderRadius: "8px",
-                    color: "#F3F4F6",
+                    color: theme === "dark" ? "#F3F4F6" : "#111827",
                   }}
                 />
                 <Bar dataKey="count" fill="#3B82F6" radius={[4, 4, 0, 0]} name="Jobs Posted" />
@@ -185,10 +190,10 @@ export default function AdminAnalyticsPage() {
                   </Pie>
                   <Tooltip
                     contentStyle={{
-                      backgroundColor: "#1F2937",
-                      border: "1px solid #374151",
+                      backgroundColor: theme === "dark" ? "#1F2937" : "#FFFFFF",
+                      border: `1px solid ${theme === "dark" ? "#374151" : "#E5E7EB"}`,
                       borderRadius: "8px",
-                      color: "#F3F4F6",
+                      color: theme === "dark" ? "#F3F4F6" : "#111827",
                     }}
                   />
                   <Legend />
@@ -209,15 +214,15 @@ export default function AdminAnalyticsPage() {
             ) : (
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={revenueData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.3} />
-                  <XAxis dataKey="plan" tick={{ fontSize: 12, fill: "#9CA3AF" }} />
-                  <YAxis tick={{ fontSize: 12, fill: "#9CA3AF" }} />
+                  <CartesianGrid strokeDasharray="3 3" stroke={gridColor} opacity={0.5} />
+                  <XAxis dataKey="plan" tick={{ fontSize: 12, fill: tickColor }} />
+                  <YAxis tick={{ fontSize: 12, fill: tickColor }} />
                   <Tooltip
                     contentStyle={{
-                      backgroundColor: "#1F2937",
-                      border: "1px solid #374151",
+                      backgroundColor: theme === "dark" ? "#1F2937" : "#FFFFFF",
+                      border: `1px solid ${theme === "dark" ? "#374151" : "#E5E7EB"}`,
                       borderRadius: "8px",
-                      color: "#F3F4F6",
+                      color: theme === "dark" ? "#F3F4F6" : "#111827",
                     }}
                     labelFormatter={(label) => `${label}`}
                   />

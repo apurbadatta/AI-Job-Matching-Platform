@@ -1,6 +1,7 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { fetchJob, fetchRelatedJobs, fetchCompanyReviews, Job } from "@/lib/api";
@@ -8,6 +9,8 @@ import { useSession } from "@/lib/auth-client";
 import { JobCardSkeleton } from "@/components/JobCard";
 import JobCard from "@/components/JobCard";
 import CoverLetterGenerator from "@/components/CoverLetterGenerator";
+
+const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 
 function timeAgo(dateString: string): string {
   const now = new Date();
@@ -50,7 +53,9 @@ export default function JobDetailPage() {
   const params = useParams();
   const router = useRouter();
   const { data: session } = useSession();
+  const queryClient = useQueryClient();
   const jobId = params.id as string;
+  const [applyMessage, setApplyMessage] = useState("");
 
   const user = session?.user as any;
   const isLoggedIn = !!session;
@@ -73,6 +78,43 @@ export default function JobDetailPage() {
     queryKey: ["companyReviews", companyId],
     queryFn: () => fetchCompanyReviews(companyId!),
     enabled: !!companyId,
+  });
+
+  const applyMutation = useMutation({
+    mutationFn: async () => {
+      const res = await fetch(`${API}/api/jobs/${jobId}/apply`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Failed to apply");
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      setApplyMessage("Application submitted successfully!");
+      setTimeout(() => setApplyMessage(""), 3000);
+    },
+    onError: (err: any) => {
+      setApplyMessage(err.message || "Failed to apply");
+    },
+  });
+
+  const saveMutation = useMutation({
+    mutationFn: async () => {
+      const res = await fetch(`${API}/api/ai/interactions`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ jobId, type: "save" }),
+      });
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["savedJobs"] });
+    },
   });
 
   if (jobLoading) {
@@ -123,6 +165,7 @@ export default function JobDetailPage() {
 
   const company = job.postedBy;
   const companyName = company?.companyName || company?.name || "Company";
+  const companyLogo = company?.companyLogo || "";
   const stats = reviewData?.stats;
   const reviews = reviewData?.reviews || [];
 
@@ -137,6 +180,16 @@ export default function JobDetailPage() {
             </svg>
             Back to Jobs
           </Link>
+
+          {applyMessage && (
+            <div className={`mb-4 px-4 py-2 rounded-lg text-sm font-medium ${
+              applyMessage.includes("success")
+                ? "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400"
+                : "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400"
+            }`}>
+              {applyMessage}
+            </div>
+          )}
 
           <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6">
             <div className="w-16 h-16 sm:w-20 sm:h-20 bg-white rounded-2xl flex items-center justify-center text-2xl sm:text-3xl font-bold text-blue-600 flex-shrink-0">
@@ -161,11 +214,15 @@ export default function JobDetailPage() {
                   jobId={jobId}
                 />
               )}
-              {isLoggedIn ? (
-                <button className="px-6 py-3 bg-white text-blue-600 font-semibold rounded-xl hover:bg-blue-50 transition-colors">
-                  Apply Now
+              {isLoggedIn && user?.role === "candidate" ? (
+                <button
+                  onClick={() => applyMutation.mutate()}
+                  disabled={applyMutation.isPending}
+                  className="px-6 py-3 bg-white text-blue-600 font-semibold rounded-xl hover:bg-blue-50 transition-colors disabled:opacity-50"
+                >
+                  {applyMutation.isPending ? "Applying..." : "Apply Now"}
                 </button>
-              ) : (
+              ) : isLoggedIn ? null : (
                 <Link
                   href={`/login?redirect=/jobs/${jobId}`}
                   className="px-6 py-3 bg-white/20 text-white font-semibold rounded-xl hover:bg-white/30 transition-colors inline-flex items-center gap-2 group relative"
@@ -342,11 +399,15 @@ export default function JobDetailPage() {
               </div>
 
               <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
-                {isLoggedIn ? (
-                  <button className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-xl transition-colors">
-                    Apply Now
+                {isLoggedIn && user?.role === "candidate" ? (
+                  <button
+                    onClick={() => applyMutation.mutate()}
+                    disabled={applyMutation.isPending}
+                    className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-xl transition-colors disabled:opacity-50"
+                  >
+                    {applyMutation.isPending ? "Applying..." : "Apply Now"}
                   </button>
-                ) : (
+                ) : isLoggedIn ? null : (
                   <Link
                     href={`/login?redirect=/jobs/${jobId}`}
                     className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-xl transition-colors flex items-center justify-center gap-2"
@@ -364,12 +425,18 @@ export default function JobDetailPage() {
                     jobId={jobId}
                   />
                 )}
-                <button className="w-full mt-3 py-3 border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 font-medium rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors flex items-center justify-center gap-2">
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                  </svg>
-                  Save Job
-                </button>
+                {isLoggedIn && user?.role === "candidate" && (
+                  <button
+                    onClick={() => saveMutation.mutate()}
+                    disabled={saveMutation.isPending}
+                    className="w-full mt-3 py-3 border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 font-medium rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+                  >
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                    </svg>
+                    {saveMutation.isPending ? "Saving..." : "Save Job"}
+                  </button>
+                )}
               </div>
             </div>
           </div>

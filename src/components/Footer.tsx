@@ -39,6 +39,7 @@ export default function Footer() {
               <li><Link href="/jobs" className="hover:text-white transition-colors">Browse Jobs</Link></li>
               <li><Link href="/register" className="hover:text-white transition-colors">Create Account</Link></li>
               <li><Link href="/pricing" className="hover:text-white transition-colors">Pricing</Link></li>
+              <li><Link href="/blog" className="hover:text-white transition-colors">Career Blog</Link></li>
               <li><Link href="/about" className="hover:text-white transition-colors">About Us</Link></li>
               <li><Link href="/contact" className="hover:text-white transition-colors">Contact</Link></li>
             </ul>
@@ -50,8 +51,6 @@ export default function Footer() {
             <ul className="space-y-2 text-sm">
               <li><Link href="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link></li>
               <li><Link href="/terms" className="hover:text-white transition-colors">Terms of Service</Link></li>
-              <li><Link href="/cookies" className="hover:text-white transition-colors">Cookie Policy</Link></li>
-              <li><Link href="/accessibility" className="hover:text-white transition-colors">Accessibility</Link></li>
             </ul>
           </div>
 

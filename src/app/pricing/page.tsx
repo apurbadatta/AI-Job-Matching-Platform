@@ -40,11 +40,11 @@ const plans = [
     features: [
       { text: "Unlimited job posts", included: true },
       { text: "Basic listing", included: true },
-      { text: "Priority support", included: true },
       { text: "AI job description generator", included: true },
       { text: "Featured badge", included: true },
-      { text: "Analytics dashboard", included: false },
+      { text: "Priority in search results", included: true },
       { text: "Priority support", included: true },
+      { text: "Analytics dashboard", included: false },
       { text: "Multiple recruiter seats", included: false },
     ],
     cta: "Upgrade to Pro",
@@ -59,11 +59,11 @@ const plans = [
     features: [
       { text: "Unlimited job posts", included: true },
       { text: "Basic listing", included: true },
-      { text: "Priority support", included: true },
       { text: "AI job description generator", included: true },
       { text: "Featured badge", included: true },
-      { text: "Analytics dashboard", included: true },
+      { text: "Priority in search results", included: true },
       { text: "Priority support", included: true },
+      { text: "Analytics dashboard", included: true },
       { text: "Multiple recruiter seats", included: true },
     ],
     cta: "Upgrade to Business",
@@ -89,14 +89,16 @@ export default function PricingPage() {
   useEffect(() => {
     const success = searchParams.get("success");
     const canceled = searchParams.get("canceled");
+    let t1: ReturnType<typeof setTimeout>, t2: ReturnType<typeof setTimeout>;
     if (success === "true") {
       setShowSuccess(true);
-      setTimeout(() => setShowSuccess(false), 5000);
+      t1 = setTimeout(() => setShowSuccess(false), 5000);
     }
     if (canceled === "true") {
       setShowCanceled(true);
-      setTimeout(() => setShowCanceled(false), 5000);
+      t2 = setTimeout(() => setShowCanceled(false), 5000);
     }
+    return () => { clearTimeout(t1); clearTimeout(t2); };
   }, [searchParams]);
 
   const handleUpgrade = async (plan: "pro" | "business") => {
